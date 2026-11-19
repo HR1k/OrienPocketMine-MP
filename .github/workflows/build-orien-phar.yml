@@ -1,0 +1,53 @@
+name: Build OrienPocketMine-MP PHAR
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - stable
+    paths:
+      - "src/**"
+      - "generated/**"
+      - "resources/**"
+      - "composer.json"
+      - "composer.lock"
+      - "build/**"
+      - ".github/workflows/build-orien-phar.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: Build PocketMine-MP.phar
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup PHP and Composer
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: "8.4"
+          tools: composer:v2
+          coverage: none
+
+      - name: Install release dependencies
+        run: composer install --no-dev --prefer-dist --no-interaction --classmap-authoritative --ignore-platform-reqs
+
+      - name: Minify BedrockData JSON files
+        run: php vendor/nethergamesmc/bedrock-data/.minify_json.php
+
+      - name: Build PHAR
+        run: php -dphar.readonly=0 build/server-phar.php --git "${GITHUB_SHA}" --build "${GITHUB_RUN_NUMBER}"
+
+      - name: Verify PHAR exists
+        run: test -s PocketMine-MP.phar
+
+      - name: Upload PocketMine-MP.phar
+        uses: actions/upload-artifact@v4
+        with:
+          name: OrienPocketMine-MP-PHAR
+          path: PocketMine-MP.phar
+          if-no-files-found: error
+          retention-days: 30
