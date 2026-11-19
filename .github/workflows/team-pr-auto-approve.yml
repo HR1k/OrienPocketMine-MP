@@ -17,7 +17,8 @@ jobs:
   dispatch:
     name: Request approval
     runs-on: ubuntu-latest
-    if: '! github.event.pull_request.draft'
+    # Skip on forks without the internal RestrictedActions GitHub App configuration.
+    if: ${{ !github.event.pull_request.draft && vars.RESTRICTED_ACTIONS_DISPATCH_ID != '' }}
 
     steps:
       - name: Generate access token
