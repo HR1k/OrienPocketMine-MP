@@ -59,7 +59,7 @@ final class ItemTranslator{
 	public function toNetworkIdQuiet(Item $item) : ?array{
 		try{
 			return $this->toNetworkId($item);
-		}catch(ItemTypeSerializeException|AssumptionFailedError){
+		}catch(ItemTypeSerializeException){
 			return null;
 		}
 	}
@@ -86,7 +86,7 @@ final class ItemTranslator{
 		if($blockStateData !== null){
 			$blockRuntimeId = $this->blockStateDictionary->lookupStateIdFromData($blockStateData);
 			if($blockRuntimeId === null){
-				throw new AssumptionFailedError("Unmapped blockstate returned by blockstate serializer: " . $blockStateData->toNbt());
+				throw new ItemTypeSerializeException("Unmapped blockstate returned by blockstate serializer: " . $blockStateData->toNbt());
 			}
 		}else{
 			$blockRuntimeId = null;
