@@ -5,6 +5,7 @@ on:
   push:
     branches:
       - stable
+      - preview/bedrock-26.70
     paths:
       - "src/**"
       - "generated/**"
