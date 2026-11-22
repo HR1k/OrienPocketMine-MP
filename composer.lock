@@ -299,12 +299,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/HR1k/BedrockProtocol.git",
-                "reference": "f46a6f17a15fdb1df9915bf58fb4c405bbaa7574"
+                "reference": "a98ccb15dc43b8e3dcacd50e89019555dffe9f0d"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/HR1k/BedrockProtocol/zipball/f46a6f17a15fdb1df9915bf58fb4c405bbaa7574",
-                "reference": "f46a6f17a15fdb1df9915bf58fb4c405bbaa7574",
+                "url": "https://api.github.com/repos/HR1k/BedrockProtocol/zipball/a98ccb15dc43b8e3dcacd50e89019555dffe9f0d",
+                "reference": "a98ccb15dc43b8e3dcacd50e89019555dffe9f0d",
                 "shasum": ""
             },
             "require": {
@@ -346,7 +346,7 @@
             "support": {
                 "source": "https://github.com/HR1k/BedrockProtocol/tree/preview/bedrock-26.70"
             },
-            "time": "2026-11-22T04:34:14Z"
+            "time": "2026-11-22T04:41:23Z"
         },
         {
             "name": "netresearch/jsonmapper",
