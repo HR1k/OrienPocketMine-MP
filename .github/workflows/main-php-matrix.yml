@@ -84,6 +84,9 @@ jobs:
       - name: Run PHPUnit tests
         run: ./vendor/bin/phpunit --bootstrap vendor/autoload.php --fail-on-warning tests/phpunit
 
+      - name: Run pinned BedrockProtocol PHPUnit tests
+        run: ./vendor/bin/phpunit --bootstrap vendor/autoload.php --fail-on-warning vendor/nethergamesmc/bedrock-protocol/tests/phpunit
+
   integration:
     name: Integration tests
     runs-on: ${{ inputs.image }}
