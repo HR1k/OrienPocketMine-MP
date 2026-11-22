@@ -198,20 +198,27 @@ final class BlockTranslator{
 	 */
 	private static array $loaded = [];
 
+	/** @phpstan-var array<int, int>|null */
+	private ?array $hashedStateIdToPaletteId = null;
+
 	public static function loadFromProtocolId(int $protocolId) : BlockTranslator{
 		$paths = self::PATHS[$protocolId];
-		return self::$loaded[$paths[self::CANONICAL_BLOCK_STATES_PATH] . ":" . $paths[self::BLOCK_STATE_META_MAP_PATH]] ??= new self(
+		$hashedIds = $protocolId >= ProtocolInfo::PROTOCOL_1_26_70_PREVIEW_26;
+		$cacheKey = $paths[self::CANONICAL_BLOCK_STATES_PATH] . ":" . $paths[self::BLOCK_STATE_META_MAP_PATH] . ($hashedIds ? ":hash" : "");
+		return self::$loaded[$cacheKey] ??= new self(
 			BlockStateDictionary::loadFromString(
 				Filesystem::fileGetContents(str_replace(".nbt", $paths[self::CANONICAL_BLOCK_STATES_PATH] . ".nbt", BedrockDataFiles::CANONICAL_BLOCK_STATES_NBT)),
 				Filesystem::fileGetContents(str_replace(".json", $paths[self::BLOCK_STATE_META_MAP_PATH] . ".json", BedrockDataFiles::BLOCK_STATE_META_MAP_JSON))
 			),
 			GlobalBlockStateHandlers::getSerializer(),
+			$hashedIds
 		);
 	}
 
 	public function __construct(
 		private BlockStateDictionary $blockStateDictionary,
-		private BlockStateSerializer $blockStateSerializer
+		private BlockStateSerializer $blockStateSerializer,
+		private bool $hashedNetworkIds = false
 	){
 		$this->fallbackStateData = BlockStateData::current(BlockTypeNames::INFO_UPDATE, []);
 		$this->fallbackStateId = $this->blockStateDictionary->lookupStateIdFromData($this->fallbackStateData) ??
@@ -236,7 +243,39 @@ final class BlockTranslator{
 			$networkId = $this->fallbackStateId;
 		}
 
-		return $this->networkIdCache[$internalStateId] = $networkId;
+		return $this->networkIdCache[$internalStateId] = $this->hashedNetworkIds ?
+			BlockStateHash::hash($this->blockStateDictionary->generateDataFromStateId($networkId) ?? throw new AssumptionFailedError("Invalid palette ID $networkId")) :
+			$networkId;
+	}
+
+	public function usesHashedNetworkIds() : bool{ return $this->hashedNetworkIds; }
+
+	public function stateDataToNetworkId(BlockStateData $data) : ?int{
+		$paletteId = $this->blockStateDictionary->lookupStateIdFromData($data);
+		if($paletteId === null){
+			return null;
+		}
+		return $this->hashedNetworkIds ?
+			BlockStateHash::hash($this->blockStateDictionary->generateDataFromStateId($paletteId) ?? throw new AssumptionFailedError("Invalid palette ID $paletteId")) :
+			$paletteId;
+	}
+
+	private function networkIdToPaletteId(int $networkId) : ?int{
+		if(!$this->hashedNetworkIds){
+			return $networkId;
+		}
+		if($this->hashedStateIdToPaletteId === null){
+			$this->hashedStateIdToPaletteId = [];
+			foreach($this->blockStateDictionary->getStates() as $paletteId => $state){
+				$this->hashedStateIdToPaletteId[BlockStateHash::hash($state->generateStateData())] = $paletteId;
+			}
+		}
+		return $this->hashedStateIdToPaletteId[$networkId] ?? null;
+	}
+
+	public function networkIdToCurrentStateData(int $networkId) : ?BlockStateData{
+		$paletteId = $this->networkIdToPaletteId($networkId);
+		return $paletteId === null ? null : $this->blockStateDictionary->generateCurrentDataFromStateId($paletteId);
 	}
 
 	/**
@@ -248,7 +287,7 @@ final class BlockTranslator{
 		//case someone wants to implement multi version).
 		$networkRuntimeId = $this->internalIdToNetworkId($internalStateId);
 
-		return $this->blockStateDictionary->generateDataFromStateId($networkRuntimeId) ?? throw new AssumptionFailedError("We just looked up this state ID, so it must exist");
+		return $this->blockStateDictionary->generateDataFromStateId($this->networkIdToPaletteId($networkRuntimeId) ?? throw new AssumptionFailedError("Unknown network state $networkRuntimeId")) ?? throw new AssumptionFailedError("We just looked up this state ID, so it must exist");
 	}
 
 	/**
@@ -263,7 +302,7 @@ final class BlockTranslator{
 		//case someone wants to implement multi version).
 		$networkRuntimeId = $this->internalIdToNetworkId($internalStateId);
 
-		return $this->blockStateDictionary->generateCurrentDataFromStateId($networkRuntimeId) ?? throw new AssumptionFailedError("We just looked up this state ID, so it must exist");
+		return $this->networkIdToCurrentStateData($networkRuntimeId) ?? throw new AssumptionFailedError("Unknown network state $networkRuntimeId");
 	}
 
 	public function getBlockStateDictionary() : BlockStateDictionary{ return $this->blockStateDictionary; }

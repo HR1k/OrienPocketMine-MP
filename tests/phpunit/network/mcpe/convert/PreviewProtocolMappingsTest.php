@@ -38,10 +38,12 @@ final class PreviewProtocolMappingsTest extends TestCase{
 			ItemTypeDictionaryFromDataHelper::loadFromProtocolId(2225),
 			ItemTypeDictionaryFromDataHelper::loadFromProtocolId(2259)
 		);
-		self::assertSame(
+		self::assertNotSame(
 			BlockTranslator::loadFromProtocolId(2225),
 			BlockTranslator::loadFromProtocolId(2259)
 		);
+		self::assertFalse(BlockTranslator::loadFromProtocolId(2225)->usesHashedNetworkIds());
+		self::assertTrue(BlockTranslator::loadFromProtocolId(2259)->usesHashedNetworkIds());
 	}
 
 	public function testPreview2259ItemTagsAndRecipeDowngraderInitialize() : void{
