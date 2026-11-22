@@ -24,8 +24,11 @@ declare(strict_types=1);
 namespace pocketmine\network\mcpe\convert;
 
 use PHPUnit\Framework\TestCase;
+use pocketmine\block\VanillaBlocks;
+use pocketmine\crafting\ExactRecipeIngredient;
 use pocketmine\data\bedrock\block\BlockStateData;
 use pocketmine\network\mcpe\protocol\ProtocolInfo;
+use pocketmine\network\mcpe\protocol\types\recipe\StringIdMetaItemDescriptor;
 
 final class PreviewBlockHashTest extends TestCase{
 
@@ -66,5 +69,16 @@ final class PreviewBlockHashTest extends TestCase{
 			self::assertNotNull($hash);
 			self::assertTrue($state->equals($preview->networkIdToCurrentStateData($hash) ?? throw new \RuntimeException("Block lookup failed")));
 		}
+	}
+
+	public function testPreviewRecipesResolveHashedBlockIdsBackToPaletteMeta() : void{
+		$ingredient = new ExactRecipeIngredient(VanillaBlocks::STONE()->asItem());
+		$legacy = TypeConverter::getInstance(ProtocolInfo::PROTOCOL_1_26_60)->coreRecipeIngredientToNet($ingredient)->getDescriptor();
+		$preview = TypeConverter::getInstance(ProtocolInfo::PROTOCOL_1_26_70_PREVIEW_26)->coreRecipeIngredientToNet($ingredient)->getDescriptor();
+
+		self::assertInstanceOf(StringIdMetaItemDescriptor::class, $legacy);
+		self::assertInstanceOf(StringIdMetaItemDescriptor::class, $preview);
+		self::assertSame($legacy->getId(), $preview->getId());
+		self::assertSame($legacy->getMeta(), $preview->getMeta());
 	}
 }

@@ -273,6 +273,16 @@ final class BlockTranslator{
 		return $this->hashedStateIdToPaletteId[$networkId] ?? null;
 	}
 
+	/**
+	 * Gets the recipe metadata of a block network ID. For Preview 2259 this first
+	 * resolves the hashed ID back to its palette index; older clients already use
+	 * palette indices and retain their original behavior.
+	 */
+	public function getMetaFromNetworkId(int $networkId) : ?int{
+		$paletteId = $this->networkIdToPaletteId($networkId);
+		return $paletteId === null ? null : $this->blockStateDictionary->getMetaFromStateId($paletteId);
+	}
+
 	public function networkIdToCurrentStateData(int $networkId) : ?BlockStateData{
 		$paletteId = $this->networkIdToPaletteId($networkId);
 		return $paletteId === null ? null : $this->blockStateDictionary->generateCurrentDataFromStateId($paletteId);

@@ -169,7 +169,7 @@ class TypeConverter{
 			$item = $ingredient->getItem();
 			[$id, $meta, $blockRuntimeId] = $this->itemTranslator->toNetworkId($item);
 			if($blockRuntimeId !== null){
-				$meta = $this->blockTranslator->getBlockStateDictionary()->getMetaFromStateId($blockRuntimeId);
+				$meta = $this->blockTranslator->getMetaFromNetworkId($blockRuntimeId);
 				if($meta === null){
 					throw new AssumptionFailedError("Every block state should have an associated meta value");
 				}
