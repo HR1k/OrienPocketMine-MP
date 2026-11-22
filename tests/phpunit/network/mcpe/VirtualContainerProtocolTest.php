@@ -29,12 +29,12 @@ use pmmp\encoding\ByteBufferWriter;
 use pocketmine\network\mcpe\protocol\PacketDecodeException;
 use pocketmine\network\mcpe\protocol\PacketPool;
 use pocketmine\network\mcpe\protocol\ProtocolInfo;
-use pocketmine\network\mcpe\protocol\VirtualContainerClosePacket;
-use pocketmine\network\mcpe\protocol\VirtualContainerOpenPacket;
 use pocketmine\network\mcpe\protocol\types\inventory\ItemStack;
 use pocketmine\network\mcpe\protocol\types\inventory\ItemStackWrapper;
 use pocketmine\network\mcpe\protocol\types\inventory\VirtualContainerCloseCause;
 use pocketmine\network\mcpe\protocol\types\inventory\VirtualContainerCloseKind;
+use pocketmine\network\mcpe\protocol\VirtualContainerClosePacket;
+use pocketmine\network\mcpe\protocol\VirtualContainerOpenPacket;
 
 /**
  * Exercises the locked Preview BedrockProtocol dependency without enabling Preview logins.
