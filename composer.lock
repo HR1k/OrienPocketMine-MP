@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "7fe3be304a1179498c41aa889cbfd9aa",
+    "content-hash": "fd354024808f40c434a6ee6edc6292a9",
     "packages": [
         {
             "name": "adhocore/json-comment",
@@ -295,15 +295,15 @@
         },
         {
             "name": "nethergamesmc/bedrock-protocol",
-            "version": "dev-master",
+            "version": "dev-preview/bedrock-26.70",
             "source": {
                 "type": "git",
-                "url": "https://github.com/NetherGamesMC/BedrockProtocol.git",
+                "url": "https://github.com/HR1k/BedrockProtocol.git",
                 "reference": "1790db82e9f859b65a5caeb7cf9ec6596a83cea7"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/NetherGamesMC/BedrockProtocol/zipball/1790db82e9f859b65a5caeb7cf9ec6596a83cea7",
+                "url": "https://api.github.com/repos/HR1k/BedrockProtocol/zipball/1790db82e9f859b65a5caeb7cf9ec6596a83cea7",
                 "reference": "1790db82e9f859b65a5caeb7cf9ec6596a83cea7",
                 "shasum": ""
             },
@@ -323,7 +323,6 @@
                 "phpstan/phpstan-strict-rules": "^2.0.0",
                 "phpunit/phpunit": "^9.5 || ^10.0 || ^11.0"
             },
-            "default-branch": true,
             "type": "library",
             "autoload": {
                 "psr-4": {
@@ -345,7 +344,7 @@
             ],
             "description": "An implementation of the Minecraft: Bedrock Edition protocol in PHP",
             "support": {
-                "source": "https://github.com/NetherGamesMC/BedrockProtocol/tree/master"
+                "source": "https://github.com/HR1k/BedrockProtocol/tree/preview/bedrock-26.70"
             },
             "time": "2026-10-29T05:41:58+00:00"
         },
