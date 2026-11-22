@@ -45,6 +45,8 @@ final class ItemTagToIdMap{
 	use ProtocolSingletonTrait;
 
 	private const PATHS = [
+		// Preview 26.70 does not yet have a verified item-tag dump; use 26.60 tags for connection testing.
+		ProtocolInfo::PROTOCOL_1_26_70_PREVIEW_26 => "",
 		ProtocolInfo::CURRENT_PROTOCOL => "",
 		ProtocolInfo::PROTOCOL_1_26_50 => "",
 		ProtocolInfo::PROTOCOL_1_26_45 => "",

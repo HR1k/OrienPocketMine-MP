@@ -24,6 +24,8 @@ declare(strict_types=1);
 namespace pocketmine\network\mcpe\convert;
 
 use PHPUnit\Framework\TestCase;
+use pocketmine\data\bedrock\ItemTagDowngrader;
+use pocketmine\data\bedrock\ItemTagToIdMap;
 use pocketmine\network\mcpe\protocol\ProtocolInfo;
 
 final class PreviewProtocolMappingsTest extends TestCase{
@@ -40,5 +42,16 @@ final class PreviewProtocolMappingsTest extends TestCase{
 			BlockTranslator::loadFromProtocolId(2225),
 			BlockTranslator::loadFromProtocolId(2259)
 		);
+	}
+
+	public function testPreview2259ItemTagsAndRecipeDowngraderInitialize() : void{
+		// Regression: a 2259 player previously crashed when the crafting cache constructed ItemTagDowngrader.
+		$oldTags = ItemTagToIdMap::getInstance(ProtocolInfo::PROTOCOL_1_26_60);
+		$previewTags = ItemTagToIdMap::getInstance(ProtocolInfo::PROTOCOL_1_26_70_PREVIEW_26);
+		self::assertSame([], $oldTags->diff($previewTags));
+		self::assertSame([], $previewTags->diff($oldTags));
+
+		$downgrader = ItemTagDowngrader::getInstance(ProtocolInfo::PROTOCOL_1_26_70_PREVIEW_26);
+		self::assertSame(ProtocolInfo::PROTOCOL_1_26_70_PREVIEW_26, $downgrader->getProtocolId());
 	}
 }
