@@ -85,7 +85,7 @@ final class ItemTranslator{
 		$blockStateData = $itemData->getBlock();
 
 		if($blockStateData !== null){
-			$blockRuntimeId = $this->blockTranslator?->usesHashedNetworkIds() ?
+			$blockRuntimeId = $this->blockTranslator?->usesHashedNetworkIds() === true ?
 				$this->blockTranslator->stateDataToNetworkId($blockStateData) :
 				$this->blockStateDictionary->lookupStateIdFromData($blockStateData);
 			if($blockRuntimeId === null){
@@ -121,7 +121,7 @@ final class ItemTranslator{
 
 		$blockStateData = null;
 		if($this->blockItemIdMap->lookupBlockId($stringId) !== null){
-			$blockStateData = $this->blockTranslator?->usesHashedNetworkIds() ?
+			$blockStateData = $this->blockTranslator?->usesHashedNetworkIds() === true ?
 				$this->blockTranslator->networkIdToCurrentStateData($networkBlockRuntimeId) :
 				$this->blockStateDictionary->generateCurrentDataFromStateId($networkBlockRuntimeId);
 			if($blockStateData === null){

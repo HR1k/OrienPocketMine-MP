@@ -25,8 +25,9 @@ namespace pocketmine\network\mcpe\convert;
 
 use pocketmine\data\bedrock\block\BlockStateData;
 use pocketmine\nbt\LittleEndianNbtSerializer;
-use pocketmine\nbt\TreeRoot;
 use pocketmine\nbt\tag\CompoundTag;
+use pocketmine\nbt\TreeRoot;
+use pocketmine\utils\Utils;
 use function ksort;
 use function ord;
 use function strlen;
@@ -47,7 +48,7 @@ final class BlockStateHash{
 		$properties = $state->getStates();
 		ksort($properties, SORT_STRING);
 		$states = CompoundTag::create();
-		foreach($properties as $name => $value){
+		foreach(Utils::stringifyKeys($properties) as $name => $value){
 			$states->setTag($name, $value);
 		}
 
