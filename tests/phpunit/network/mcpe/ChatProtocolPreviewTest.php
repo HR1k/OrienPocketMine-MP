@@ -48,8 +48,8 @@ final class ChatProtocolPreviewTest extends TestCase{
 		self::assertSame("[VIP] ", $decoded->getFormatting()?->getNamePrefix());
 	}
 
-	public function testChatIsNotEnabledForOlderClients() : void{
+	public function testChatIsAvailableForPreviewClients() : void{
 		self::assertInstanceOf(ChatPacket::class, PacketPool::getInstance()->getPacketById(361));
-		self::assertNotContains(2259, ProtocolInfo::ACCEPTED_PROTOCOL);
+		self::assertContains(2259, ProtocolInfo::ACCEPTED_PROTOCOL);
 	}
 }

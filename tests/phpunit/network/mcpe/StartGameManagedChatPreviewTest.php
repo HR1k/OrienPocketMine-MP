@@ -47,8 +47,8 @@ final class StartGameManagedChatPreviewTest extends TestCase{
 		self::assertNull($decoded->getManagedChatEnabled());
 	}
 
-	public function testNgDoesNotAdvertiseUnsupportedPreviewVersion() : void{
+	public function testNgKeeps2225DefaultWhileAcceptingPreview() : void{
 		self::assertSame(2225, ProtocolInfo::CURRENT_PROTOCOL);
-		self::assertNotContains(2259, ProtocolInfo::ACCEPTED_PROTOCOL);
+		self::assertContains(2259, ProtocolInfo::ACCEPTED_PROTOCOL);
 	}
 }

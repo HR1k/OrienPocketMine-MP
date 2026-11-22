@@ -79,8 +79,8 @@ final class PassengerAndSoundPreviewIntegrationTest extends TestCase{
 		self::assertSame(1234, $decoded->getAttachedEntityRuntimeId());
 	}
 
-	public function testPreview2259StillNotEnabled() : void{
+	public function testPreview2259AcceptedForDirectServerTests() : void{
 		self::assertSame(2225, ProtocolInfo::CURRENT_PROTOCOL);
-		self::assertNotContains(2259, ProtocolInfo::ACCEPTED_PROTOCOL);
+		self::assertContains(2259, ProtocolInfo::ACCEPTED_PROTOCOL);
 	}
 }

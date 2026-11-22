@@ -61,8 +61,8 @@ final class TextPacketQueuePreviewTest extends TestCase{
 		self::assertSame($legacyWriter->getData(), $previewWriter->getData());
 	}
 
-	public function testPreviewNotYetAccepted() : void{
+	public function testPreviewAcceptedForTesting() : void{
 		self::assertSame(2225, ProtocolInfo::CURRENT_PROTOCOL);
-		self::assertNotContains(2259, ProtocolInfo::ACCEPTED_PROTOCOL);
+		self::assertContains(2259, ProtocolInfo::ACCEPTED_PROTOCOL);
 	}
 }

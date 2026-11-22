@@ -43,7 +43,7 @@ final class VirtualContainerProtocolTest extends TestCase{
 
 	public function testPreviewPacketsRegisteredWithoutChangingCurrentProtocol() : void{
 		self::assertSame(2225, ProtocolInfo::CURRENT_PROTOCOL);
-		self::assertNotContains(2259, ProtocolInfo::ACCEPTED_PROTOCOL);
+		self::assertContains(2259, ProtocolInfo::ACCEPTED_PROTOCOL);
 		self::assertInstanceOf(VirtualContainerOpenPacket::class, PacketPool::getInstance()->getPacketById(366));
 		self::assertInstanceOf(VirtualContainerClosePacket::class, PacketPool::getInstance()->getPacketById(367));
 	}

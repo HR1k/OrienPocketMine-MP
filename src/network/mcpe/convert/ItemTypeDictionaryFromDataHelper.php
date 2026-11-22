@@ -45,6 +45,8 @@ use function str_replace;
 final class ItemTypeDictionaryFromDataHelper{
 
 	private const PATHS = [
+		// Temporary 26.60 item dictionary until a verified 26.70 dump is available.
+		ProtocolInfo::PROTOCOL_1_26_70_PREVIEW_26 => "",
 		ProtocolInfo::CURRENT_PROTOCOL => "",
 		ProtocolInfo::PROTOCOL_1_26_50 => "-1.26.50",
 		ProtocolInfo::PROTOCOL_1_26_45 => "-1.26.40",
