@@ -77,6 +77,9 @@ final class WaterdogForwardedIdentityTest extends TestCase{
 		];
 	}
 
+	/**
+	 * @param array<string, mixed> $claims
+	 */
 	#[DataProvider("invalidClaims")]
 	public function testTrustedProxyInvalidClaimsAreRejected(array $claims) : void{
 		$this->expectException(\InvalidArgumentException::class);
