@@ -71,6 +71,39 @@ final class PreviewBlockHashTest extends TestCase{
 		}
 	}
 
+	public function testPreviewHashCacheSurvivesPaletteMutation() : void{
+		// Use an isolated dictionary: NG's BlockPalette replaces these fields via reflection.
+		$source = BlockTranslator::loadFromProtocolId(ProtocolInfo::PROTOCOL_1_26_70_PREVIEW_26);
+		$dictionary = clone $source->getBlockStateDictionary();
+		$translator = new BlockTranslator($dictionary, \pocketmine\world\format\io\GlobalBlockStateHandlers::getSerializer(), true);
+		$stone = BlockStateData::current("minecraft:stone", []);
+		$stoneHash = $translator->stateDataToNetworkId($stone);
+		self::assertNotNull($stoneHash);
+		$oldIndex = $dictionary->lookupStateIdFromData($stone);
+		self::assertNotNull($oldIndex);
+		$oldMeta = $translator->getMetaFromNetworkId($stoneHash);
+		self::assertSame("minecraft:stone", $translator->networkIdToCurrentStateData($stoneHash)?->getName());
+
+		$custom = new BlockStateDictionaryEntry("orien:palette_test", [], 7, null);
+		$states = $dictionary->getStates();
+		array_unshift($states, $custom);
+		$updated = new BlockStateDictionary($states);
+		foreach(["states", "stateDataToStateIdLookup", "idMetaToStateIdLookupCache"] as $propertyName){
+			$property = new \ReflectionProperty($dictionary, $propertyName);
+			$property->setValue($dictionary, $property->getValue($updated));
+		}
+		(new \ReflectionProperty($translator, "fallbackStateId"))->setValue($translator, $dictionary->lookupStateIdFromData($translator->getFallbackStateData()));
+
+		self::assertSame($oldIndex + 1, $dictionary->lookupStateIdFromData($stone));
+		self::assertSame($stoneHash, $translator->stateDataToNetworkId($stone));
+		self::assertSame("minecraft:stone", $translator->networkIdToCurrentStateData($stoneHash)?->getName());
+		self::assertSame($oldMeta, $translator->getMetaFromNetworkId($stoneHash));
+		$customHash = $translator->stateDataToNetworkId($custom->generateStateData());
+		self::assertNotNull($customHash);
+		self::assertSame("orien:palette_test", $translator->networkIdToCurrentStateData($customHash)?->getName());
+		self::assertSame(7, $translator->getMetaFromNetworkId($customHash));
+	}
+
 	public function testPreviewRecipesResolveHashedBlockIdsBackToPaletteMeta() : void{
 		$ingredient = new ExactRecipeIngredient(VanillaBlocks::STONE()->asItem());
 		$legacy = TypeConverter::getInstance(ProtocolInfo::PROTOCOL_1_26_60)->coreRecipeIngredientToNet($ingredient)->getDescriptor();
