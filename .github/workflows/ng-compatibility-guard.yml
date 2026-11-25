@@ -1,0 +1,47 @@
+name: NG compatibility guard
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - maintenance/ng-compatibility-guard
+  pull_request:
+    branches:
+      - preview/bedrock-26.70
+
+permissions:
+  contents: read
+
+jobs:
+  ng-compatibility:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Compare against pinned NG and Orien Preview snapshots
+        shell: bash
+        env:
+          NG_BASE: eaa2e58156e71e7a10093cffc98b02e1023f05ee
+          PREVIEW_BASE: cabf8a3381ddc0b3f41bf17eb11b1765aafd69c0
+        run: |
+          set -euo pipefail
+          git cat-file -e "$NG_BASE^{commit}"
+          git cat-file -e "$PREVIEW_BASE^{commit}"
+          git merge-base --is-ancestor "$NG_BASE" HEAD
+          echo "=== Differences from original NG ==="
+          git diff --no-renames --name-status "$NG_BASE" HEAD -- src generated resources build composer.json composer.lock
+          echo "=== Original NG core files removed ==="
+          removed="$(git diff --no-renames --diff-filter=D --name-only "$NG_BASE" HEAD -- src generated resources)"
+          if [[ -n "$removed" ]]; then
+            printf '%s\n' "$removed"
+            echo "::error::Original NG core files were removed. Manual review required."
+            exit 1
+          fi
+          echo "=== New protected changes since the pinned Preview snapshot ==="
+          if ! git diff --quiet --no-renames "$PREVIEW_BASE" HEAD -- src generated resources build composer.json composer.lock; then
+            git diff --no-renames --name-status "$PREVIEW_BASE" HEAD -- src generated resources build composer.json composer.lock
+            echo "::error::Protected core or dependency changes require manual review before the baseline can be advanced."
+            exit 1
+          fi
+          echo "No new protected changes. This structural check does not certify runtime compatibility."
