@@ -29,6 +29,8 @@ use pocketmine\crafting\ExactRecipeIngredient;
 use pocketmine\data\bedrock\block\BlockStateData;
 use pocketmine\network\mcpe\protocol\ProtocolInfo;
 use pocketmine\network\mcpe\protocol\types\recipe\StringIdMetaItemDescriptor;
+use function array_unshift;
+use function array_values;
 
 final class PreviewBlockHashTest extends TestCase{
 
@@ -85,7 +87,7 @@ final class PreviewBlockHashTest extends TestCase{
 		self::assertSame("minecraft:stone", $translator->networkIdToCurrentStateData($stoneHash)?->getName());
 
 		$custom = new BlockStateDictionaryEntry("orien:palette_test", [], 7, null);
-		$states = $dictionary->getStates();
+		$states = array_values($dictionary->getStates());
 		array_unshift($states, $custom);
 		$updated = new BlockStateDictionary($states);
 		foreach(["states", "stateDataToStateIdLookup", "idMetaToStateIdLookupCache"] as $propertyName){
