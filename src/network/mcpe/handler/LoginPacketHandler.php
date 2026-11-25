@@ -30,6 +30,7 @@ use pocketmine\lang\Translatable;
 use pocketmine\network\mcpe\auth\ProcessLegacyLoginTask;
 use pocketmine\network\mcpe\auth\ProcessOpenIdLoginTask;
 use pocketmine\network\mcpe\auth\ProcessSelfSignedLoginTask;
+use pocketmine\network\mcpe\auth\WaterdogForwardedIdentity;
 use pocketmine\network\mcpe\JwtException;
 use pocketmine\network\mcpe\JwtUtils;
 use pocketmine\network\mcpe\NetworkSession;
@@ -56,6 +57,7 @@ use Ramsey\Uuid\UuidInterface;
 use function base64_decode;
 use function chr;
 use function count;
+use function getenv;
 use function gettype;
 use function is_array;
 use function is_object;
@@ -69,6 +71,9 @@ use const JSON_THROW_ON_ERROR;
  * Handles the initial login phase of the session. This handler is used as the initial state.
  */
 class LoginPacketHandler extends PacketHandler{
+	private bool $selfSignedLogin = false;
+	private ?string $waterdogForwardedXuid = null;
+
 	/**
 	 * @phpstan-param \Closure(PlayerInfo) : void $playerInfoConsumer
 	 * @phpstan-param \Closure(bool $isAuthenticated, bool $authRequired, Translatable|string|null $error, ?string $clientPubKey) : void $authCallback
@@ -100,6 +105,7 @@ class LoginPacketHandler extends PacketHandler{
 			$authInfo->Certificate = $packet->authInfoJson;
 			$authInfo->Token = "";
 		}
+		$this->selfSignedLogin = $authInfo->AuthenticationType === AuthenticationType::SELF_SIGNED->value;
 		$clientData = $this->parseClientData($packet->clientDataJwt);
 
 		if($this->session->getProtocolId() === ProtocolInfo::PROTOCOL_1_26_44){
@@ -248,6 +254,10 @@ class LoginPacketHandler extends PacketHandler{
 	}
 
 	private function processLoginCommon(LoginPacket $packet, string $username, UuidInterface $legacyUuid, string $xuid, ClientData $clientData) : ?bool{
+		if($this->waterdogForwardedXuid !== null){
+			$xuid = $this->waterdogForwardedXuid;
+			$legacyUuid = self::calculateUuidFromXuid($xuid);
+		}
 		if(!Player::isValidUserName($username)){
 			$this->session->disconnectWithError(KnownTranslationFactory::disconnectionScreen_invalidName());
 
@@ -392,6 +402,21 @@ class LoginPacketHandler extends PacketHandler{
 			throw PacketHandlingException::wrap($e);
 		}
 
+		// Only an explicitly configured, isolated proxy may vouch for an Xbox identity.
+		if($this->selfSignedLogin){
+			try{
+				$this->waterdogForwardedXuid = WaterdogForwardedIdentity::read(
+					$this->session->getIp(),
+					getenv("ORIEN_TRUSTED_WATERDOG_IP"),
+					$clientDataClaims
+				);
+			}catch(\InvalidArgumentException $e){
+				throw PacketHandlingException::wrap($e);
+			}
+		}
+		// Do not pass proxy-specific claims to the vanilla ClientData mapper.
+		unset($clientDataClaims["Waterdog_Auth"], $clientDataClaims["Waterdog_XUID"], $clientDataClaims["Waterdog_IP"], $clientDataClaims["Waterdog_MID"]);
+
 		$mapper = $this->defaultJsonMapper("ClientData JWT body");
 		try{
 			$clientData = $mapper->map($clientDataClaims, new ClientData());
@@ -424,7 +449,7 @@ class LoginPacketHandler extends PacketHandler{
 	protected function processSelfSignedLogin(string $token, string $clientPublicKey, string $clientData, bool $authRequired) : void{
 		$this->session->setHandler(null); //drop packets received during login verification
 
-		$this->server->getAsyncPool()->submitTask(new ProcessSelfSignedLoginTask($token, $clientPublicKey, $clientData, $authRequired, onCompletion: $this->authCallback));
+		$this->server->getAsyncPool()->submitTask(new ProcessSelfSignedLoginTask($token, $clientPublicKey, $clientData, $authRequired, onCompletion: $this->onSelfSignedLoginVerified(...)));
 	}
 
 	/**
@@ -437,7 +462,18 @@ class LoginPacketHandler extends PacketHandler{
 		if($rootAuthKeyDer === false){ //should never happen unless the constant is messed up
 			throw new \InvalidArgumentException("Failed to base64-decode hardcoded Mojang root public key");
 		}
-		$this->server->getAsyncPool()->submitTask(new ProcessLegacyLoginTask($legacyCertificate, $clientDataJwt, rootAuthKeyDer: $rootAuthKeyDer, authRequired: $authRequired, onCompletion: $this->authCallback));
+		$this->server->getAsyncPool()->submitTask(new ProcessLegacyLoginTask($legacyCertificate, $clientDataJwt, rootAuthKeyDer: $rootAuthKeyDer, authRequired: $authRequired, onCompletion: $this->onSelfSignedLoginVerified(...)));
+	}
+
+	/**
+	 * Keep the original JWT validation and NetworkSession transport-key verification.
+	 * Forwarded identity is accepted only after the self-signed login and client JWT were validated.
+	 */
+	private function onSelfSignedLoginVerified(bool $authenticated, bool $authRequired, Translatable|string|null $error, ?string $clientPubKey) : void{
+		if($this->waterdogForwardedXuid !== null && $error === null && $clientPubKey !== null && $clientPubKey !== ""){
+			$authenticated = true;
+		}
+		($this->authCallback)($authenticated, $authRequired, $error, $clientPubKey);
 	}
 
 	private function defaultJsonMapper(string $logContext) : \JsonMapper{
