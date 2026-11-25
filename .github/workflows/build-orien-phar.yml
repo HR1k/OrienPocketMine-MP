@@ -5,6 +5,7 @@ on:
   push:
     branches:
       - stable
+      - waterdog-ng-integration
     paths:
       - "src/**"
       - "generated/**"
