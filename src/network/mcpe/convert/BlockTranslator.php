@@ -201,6 +201,9 @@ final class BlockTranslator{
 	/** @phpstan-var array<int, int>|null */
 	private ?array $hashedStateIdToPaletteId = null;
 
+	/** @var BlockStateDictionaryEntry[]|null */
+	private ?array $hashedPaletteSnapshot = null;
+
 	public static function loadFromProtocolId(int $protocolId) : BlockTranslator{
 		$paths = self::PATHS[$protocolId];
 		$hashedIds = $protocolId >= ProtocolInfo::PROTOCOL_1_26_70_PREVIEW_26;
@@ -226,6 +229,9 @@ final class BlockTranslator{
 	}
 
 	public function internalIdToNetworkId(int $internalStateId) : int{
+		if($this->hashedNetworkIds){
+			$this->refreshHashedPaletteCache();
+		}
 		if(isset($this->networkIdCache[$internalStateId])){
 			return $this->networkIdCache[$internalStateId];
 		}
@@ -260,10 +266,25 @@ final class BlockTranslator{
 			$paletteId;
 	}
 
+	/**
+	 * NG plugins can replace the dictionary's states through reflection.
+	 * Keep a copy-on-write snapshot so hashed lookups and cached fallback IDs
+	 * cannot outlive the palette they were built from. Legacy IDs are untouched.
+	 */
+	private function refreshHashedPaletteCache() : void{
+		$states = $this->blockStateDictionary->getStates();
+		if($this->hashedPaletteSnapshot !== $states){
+			$this->hashedPaletteSnapshot = $states;
+			$this->hashedStateIdToPaletteId = null;
+			$this->networkIdCache = [];
+		}
+	}
+
 	private function networkIdToPaletteId(int $networkId) : ?int{
 		if(!$this->hashedNetworkIds){
 			return $networkId;
 		}
+		$this->refreshHashedPaletteCache();
 		if($this->hashedStateIdToPaletteId === null){
 			$this->hashedStateIdToPaletteId = [];
 			foreach($this->blockStateDictionary->getStates() as $paletteId => $state){
